@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picnic Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --secondary-color: #00255c;
+            --tertiary-color: #F6F6F6;
+            --contrast-color: #ffffff;
+            --base-color: #000000;
+            --text-color: #FFFFFF;
+            --accent-blue: #2874fc;
+            --dark-blue: #010d3c;
+            --spacing-sm: 1rem;
+            --spacing-md: 2rem;
+            --spacing-lg: 4rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(rgb(0, 0, 0) 22%, rgb(24, 71, 153));
+            color: var(--text-color);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 10px auto;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container img {
+            /*width: 100px;*/
+            /*height: 100px;*/
+            max-width: 250px;
+            border-radius: 20px;
+            display: block;
+            margin: 0 auto;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: clamp(38.588px, 3.037rem + ((1vw - 3.2px) * 5.388), 96px);
+            font-weight: 400;
+            letter-spacing: -5px;
+            margin-bottom: var(--spacing-md);
+            color: var(--primary-color);
+        }
+
+        p {
+            margin-bottom: 30px;
+            color: #7f8c8d;
+        }
+
+        button {
+            background-color: var(--accent-blue);
+            color: var(--text-color);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: var(--spacing-md);
+        }
+
+        button:hover {
+            background-color: var(--primary-color);
+            color: var(--base-color);
+            transform: translateY(-2px);
+        }
+
+        .chat-message {
+            /*background-color: #f0f0f0;*/
+            padding: 20px;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            color: var(--primary-color); /* Set text color for chat messages */
+            text-align: left; /* Align text to the left */
+            font-size: 1.5rem;
+        }
+
+        #city {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+
+        .footer {
+            background-color: black;
+            color: var(--text-color);
+            padding: 15px 0;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .footer p {
+            margin: 0;
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="/barbecue-picnic-set.png" alt="Picnic Image">
+        <h1>Picnic Planner</h1>
+        <p>Enter a city to check the picnic weather!</p>
+
+        <form id="city-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" id="city" name="city" 
+                   pattern="[A-Za-z\s]+" 
+                   title="Please enter only letters and spaces"
+                   maxlength="100" placeholder="Enter city name (letters only)" required
+                   autocomplete="off" spellcheck="false"
+                   onkeypress="return /[a-zA-Z\s]/.test(event.key)">
+            <button type="submit">Check Picnic Weather</button>
+        </form>
+
+        <div id="results">
+            {% for suggestion in suggestions %}
+                <div class="chat-message">
+                    <p>{{ suggestion }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© Google API 2025 Picnic Planner | Built with love by Mohammad Ali Moslemi</p>
+    </footer>
+
+    <script>
+        function typeWriter(text, element, speed) {
+            let i = 0;
+            // Increase typing speed by processing multiple characters per tick
+            const charsPerTick = 2;
+            function typing() {
+                for(let j = 0; j < charsPerTick && i < text.length; j++) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                }
+                if (i < text.length) {
+                    setTimeout(typing, speed);
+                }
+            }
+            element.innerHTML = "";
+            typing();
+        }
+
+        document.getElementById('city-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const city = document.getElementById('city').value;
+            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            fetch('/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: 'city=' + encodeURIComponent(city)
+            })
+            .then(response => response.json())
+            .then(data => {
+                
+
+                data.suggestions.forEach(suggestion => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('chat-message');
+                    resultsDiv.appendChild(messageDiv);
+                    typeWriter(suggestion, messageDiv, 10); // Faster typing speed: 10ms
+                });
+            });
+        });
+    </script>
+</body>
+</html>

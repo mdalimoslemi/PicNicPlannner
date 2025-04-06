@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Picnic Planner - Result</title>
+    <style>
+        body { font-family: sans-serif; }
+        .chat-message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Picnic Planner</h1>
+    <a href="/">Check another city</a>
+    {% for suggestion in suggestions %}
+        <div class="chat-message">
+            <p>{{ suggestion }}</p>
+        </div>
+    {% endfor %}
+</body>
+</html>

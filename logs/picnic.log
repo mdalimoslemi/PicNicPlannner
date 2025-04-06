@@ -1,0 +1,8 @@
+2025-04-06 12:09:49,715 INFO: Picnic startup [in /workspaces/PicNicPlannner/app.py:40]
+2025-04-06 12:09:50,441 INFO: Picnic startup [in /workspaces/PicNicPlannner/app.py:40]
+2025-04-06 12:10:02,294 INFO: Successfully fetched weather for Berlin [in /workspaces/PicNicPlannner/app.py:111]
+2025-04-06 12:10:46,712 INFO: Successfully fetched weather for Paris [in /workspaces/PicNicPlannner/app.py:111]
+2025-04-06 12:14:14,670 INFO: Picnic startup [in /workspaces/PicNicPlannner/app.py:41]
+2025-04-06 12:14:42,906 INFO: Picnic startup [in /workspaces/PicNicPlannner/app.py:41]
+2025-04-06 12:15:48,684 INFO: Picnic startup [in /workspaces/PicNicPlannner/app.py:40]
+2025-04-06 12:16:00,528 INFO: Successfully fetched weather for berlin [in /workspaces/PicNicPlannner/app.py:111]
