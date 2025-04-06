@@ -8,10 +8,9 @@ import re
 import random
 import datetime
 import os
-import logging
-from logging.handlers import RotatingFileHandler
 import google.generativeai as genai
 from dotenv import load_dotenv
+from logging import StreamHandler
 
 # Load environment variables
 load_dotenv()
@@ -27,23 +26,11 @@ talisman = Talisman()
 # Initialize Flask app
 app = Flask(__name__)
 
-# Configure logging
-if not os.path.exists('logs'):
-    os.makedirs('logs')
-file_handler = RotatingFileHandler('logs/picnic.log', maxBytes=10240, backupCount=10)
-file_handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-))
-file_handler.setLevel(logging.INFO)
-app.logger.addHandler(file_handler)
-app.logger.setLevel(logging.INFO)
-app.logger.info('Picnic startup')
-
 # Configuration
 class Config:
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
     DEBUG = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
-    SECRET_KEY = os.environ.get("SECRET_KEY") or "your-secret-key-here"
+    SECRET_KEY = os.environ.get("SECRET_KEY")
     CSRF_ENABLED = True
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
@@ -58,11 +45,14 @@ csrf.init_app(app)
 limiter.init_app(app)
 talisman.init_app(app,
     content_security_policy={
-        'default-src': "'self'",
-        'script-src': "'self' 'unsafe-inline'",
-        'style-src': "'self' 'unsafe-inline' fonts.googleapis.com",
-        'font-src': "'self' fonts.gstatic.com",
-        'img-src': "'self' data:",
+        'default-src': "'self'",  # Allow resources only from the same origin
+        'script-src': "'self'",  # Allow scripts only from the same origin
+        'style-src': "'self' fonts.googleapis.com",  # Allow styles from the same origin and Google Fonts
+        'font-src': "'self' fonts.gstatic.com",  # Allow fonts from the same origin and Google Fonts
+        'img-src': "'self' data:",  # Allow images from the same origin and inline data URIs
+        'connect-src': "'self'",  # Allow AJAX requests only to the same origin
+        'frame-src': "'none'",  # Disallow embedding in iframes
+        'object-src': "'none'",  # Disallow plugins like Flash
     },
     force_https=True
 )
@@ -71,7 +61,7 @@ talisman.init_app(app,
 try:
     genai.configure(api_key=Config.GEMINI_API_KEY)
 except Exception as e:
-    app.logger.error(f"Failed to initialize Gemini API: {e}")
+    pass  # Handle Gemini API initialization failure gracefully
 
 def clean_weather_text(text):
     """
@@ -108,11 +98,9 @@ def get_weather(city):
         response = model.generate_content(prompt)
         full_response = format_weather_response(response.text)
         
-        app.logger.info(f"Successfully fetched weather for {city}")
         return {"weather_description": full_response}
 
     except Exception as e:
-        app.logger.error(f"Error fetching weather for {city}: {e}")
         return {"error": "Unable to fetch weather information. Please try again later."}
 
 def suggest_park(city):
@@ -192,7 +180,6 @@ def not_found_error(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    app.logger.error(f'Server Error: {error}')
     return render_template('500.html'), 500
 
 if __name__ == "__main__":
